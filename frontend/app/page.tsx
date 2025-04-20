@@ -1,0 +1,205 @@
+"use client";
+
+import ImageUpload from "@/components/ImageUpload";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+
+const API_BASE_URL = "http://localhost:8000";
+
+// Define interfaces for our data types
+interface WardrobeItem {
+  id: string;
+  url: string;
+}
+
+interface ApiResponse {
+  id: string;
+  image: string;
+  image_url: string;
+  item_type: 'TOP' | 'BOTTOM';
+}
+
+const FloatingActionButton = ({ tops, bottoms }: { tops: WardrobeItem[], bottoms: WardrobeItem[] }) => {
+  const router = useRouter();
+
+  const handleNavigateToSelection = () => {
+    if (tops.length === 0 || bottoms.length === 0) {
+      toast.error(
+        tops.length === 0 && bottoms.length === 0
+          ? "Please upload at least one top and one bottom"
+          : tops.length === 0
+          ? "Please upload at least one top"
+          : "Please upload at least one bottom"
+      );
+      return;
+    }
+
+    router.push('/selection');
+  };
+
+  return (
+    <Button
+      onClick={handleNavigateToSelection}
+      className="fixed bottom-6 right-6 shadow-lg bg-purple-600 hover:bg-purple-700 transition-all duration-300 group"
+      size="lg"
+    >
+      <span className="mr-2">Go to Selection</span>
+      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+    </Button>
+  );
+};
+
+export default function Home() {
+  const [tops, setTops] = useState<WardrobeItem[]>([]);
+  const [bottoms, setBottoms] = useState<WardrobeItem[]>([]);
+
+  const handleTopUpload = async (file: File) => {
+    toast.promise(
+      async () => {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('item_type', 'TOP');
+
+        const response = await fetch(`${API_BASE_URL}/api/upload/`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
+        }
+
+        const data: ApiResponse = await response.json();
+        // Create a new WardrobeItem object
+        const newItem: WardrobeItem = {
+          id: data.id,
+          url: `${API_BASE_URL}${data.image_url}`
+        };
+        
+        setTops(prevTops => [...prevTops, newItem]);
+      },
+      {
+        loading: 'Uploading top...',
+        success: 'Top uploaded successfully!',
+        error: 'Failed to upload top',
+      }
+    );
+  };
+
+  const handleBottomUpload = async (file: File) => {
+    toast.promise(
+      async () => {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('item_type', 'BOTTOM');
+
+        const response = await fetch(`${API_BASE_URL}/api/upload/`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
+        }
+
+        const data: ApiResponse = await response.json();
+        // Create a new WardrobeItem object
+        const newItem: WardrobeItem = {
+          id: data.id,
+          url: `${API_BASE_URL}${data.image_url}`
+        };
+        
+        setBottoms(prevBottoms => [...prevBottoms, newItem]);
+      },
+      {
+        loading: 'Uploading bottom...',
+        success: 'Bottom uploaded successfully!',
+        error: 'Failed to upload bottom',
+      }
+    );
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    toast.promise(
+      async () => {
+        const response = await fetch(`${API_BASE_URL}/api/wardrobe-items/${imageId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete image');
+        }
+
+        // Update state to remove deleted image
+        setTops(prevTops => prevTops.filter(img => img.id !== imageId));
+        setBottoms(prevBottoms => prevBottoms.filter(img => img.id !== imageId));
+      },
+      {
+        loading: 'Deleting image...',
+        success: 'Image deleted successfully!',
+        error: 'Failed to delete image',
+      }
+    );
+  };
+
+  const fetchImages = async () => {
+    toast.promise(
+      async () => {
+        const topsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=TOP`);
+        const topsData: ApiResponse[] = await topsResponse.json();
+        
+        setTops(topsData.map((item) => ({
+          id: item.id,
+          url: `${API_BASE_URL}${item.image_url}`
+        })));
+
+        const bottomsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=BOTTOM`);
+        const bottomsData: ApiResponse[] = await bottomsResponse.json();
+        
+        setBottoms(bottomsData.map((item) => ({
+          id: item.id,
+          url: `${API_BASE_URL}${item.image_url}`
+        })));
+      },
+      {
+        loading: 'Fetching your wardrobe items...',
+        success: 'Wardrobe items loaded successfully!',
+        error: 'Failed to load wardrobe items',
+      }
+    );
+  };
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-center mb-8">
+        Add clothes to your Virtual Wardrobe
+      </h1>
+      
+      <ImageUpload
+        title="STEP 1"
+        subtitle="Upload your tops you wish to add in wardrobe"
+        buttonText="Upload Tops"
+        images={tops}
+        onUpload={handleTopUpload}
+        onDelete={handleDeleteImage}
+      />
+
+      <ImageUpload
+        title="STEP 2"
+        subtitle="Upload your bottom you wish to add in wardrobe"
+        buttonText="Upload Bottom Wear"
+        images={bottoms}
+        onUpload={handleBottomUpload}
+        onDelete={handleDeleteImage}
+      />
+      <FloatingActionButton tops={tops} bottoms={bottoms} />
+    </div>
+  );
+}
