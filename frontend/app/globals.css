@@ -149,3 +149,18 @@
     opacity: 1;
   }
 }
+
+/* app/globals.css */
+@layer utilities {
+  .selected-item {
+    @apply border-purple-500 shadow-lg scale-105;
+  }
+  
+  .item-grid {
+    @apply grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4;
+  }
+  
+  .outfit-card {
+    @apply bg-gray-100 p-6 rounded-lg space-y-4 transition-all duration-300 hover:shadow-lg;
+  }
+}

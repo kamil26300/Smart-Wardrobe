@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <div className="w-full flex flex-col items-center justify-center pt-8 pb-2">
       {/* Top Gradient Bar */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500" />
+      <div className="fixed top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 z-20" />
       <div className="w-full max-w-2xl px-4 text-center space-y-8">
         {/* Error Icon */}
         <div className="flex justify-center">
