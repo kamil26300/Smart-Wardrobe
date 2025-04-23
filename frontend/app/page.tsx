@@ -161,31 +161,35 @@ export default function Home() {
   };
 
   const fetchImages = async () => {
-    toast.promise(
-      async () => {
-        const topsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=TOP`);
-        const topsData: ApiResponse[] = await topsResponse.json();
-        
-        setTops(topsData.map((item) => ({
-          id: item.id,
-          url: `${API_BASE_URL}${item.image_url}`
-        })));
-
-        const bottomsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=BOTTOM`);
-        const bottomsData: ApiResponse[] = await bottomsResponse.json();
-        
-        setBottoms(bottomsData.map((item) => ({
-          id: item.id,
-          url: `${API_BASE_URL}${item.image_url}`
-        })));
-      },
-      {
-        loading: 'Fetching your wardrobe items...',
-        success: 'Wardrobe items loaded successfully!',
-        error: 'Failed to load wardrobe items',
-      }
-    );
+    setIsLoadingTop(true);
+    setIsLoadingBottom(true);
+  
+    try {
+      toast.loading('Fetching your wardrobe items...');
+  
+      const topsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=TOP`);
+      const topsData: ApiResponse[] = await topsResponse.json();
+      setTops(topsData.map((item) => ({
+        id: item.id,
+        url: `${API_BASE_URL}${item.image_url}`
+      })));
+  
+      const bottomsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=BOTTOM`);
+      const bottomsData: ApiResponse[] = await bottomsResponse.json();
+      setBottoms(bottomsData.map((item) => ({
+        id: item.id,
+        url: `${API_BASE_URL}${item.image_url}`
+      })));
+  
+      toast.success('Wardrobe items loaded successfully!');
+    } catch (error) {
+      toast.error('Failed to load wardrobe items');
+    } finally {
+      setIsLoadingTop(false); // ✅ unset loading
+      setIsLoadingBottom(false); // ✅ unset loading
+    }
   };
+  
 
   useEffect(() => {
     fetchImages();
@@ -204,7 +208,8 @@ export default function Home() {
         images={tops}
         onUpload={handleTopUpload}
         onDelete={handleDeleteImage}
-      />
+        isLoading={isLoadingTop}
+        />
 
       <ImageUpload
         title="STEP 2"
@@ -213,6 +218,7 @@ export default function Home() {
         images={bottoms}
         onUpload={handleBottomUpload}
         onDelete={handleDeleteImage}
+        isLoading={isLoadingBottom}
       />
       <FloatingActionButton tops={tops} bottoms={bottoms} />
     </div>

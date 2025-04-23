@@ -20,7 +20,7 @@ class PredefinedPairAdmin(admin.ModelAdmin):
 
 @admin.register(ItemColor)
 class ItemColorAdmin(admin.ModelAdmin):
-    list_display = ('clothing', 'colour', 'confidence_score', 'created_at')
+    list_display = ('clothing', 'colour', 'created_at')
     list_filter = ('colour', 'clothing__item_type')  # Updated to use item_type
     search_fields = ('colour__name',)
 

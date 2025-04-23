@@ -1,11 +1,10 @@
-// components/ImageUpload.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Upload, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import { toast } from "sonner";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";

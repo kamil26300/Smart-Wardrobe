@@ -81,18 +81,13 @@ class ItemColor(models.Model):
         on_delete=models.CASCADE,
         related_name='items'
     )
-    confidence_score = models.FloatField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(0), MaxValueValidator(1)]
-    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ['clothing', 'colour']
 
     def __str__(self):
-        return f"{self.clothing.item_type} - {self.colour.name} ({self.confidence_score})"
+        return f"{self.clothing.item_type} - {self.colour.name}"
 
     def clean(self):
         from django.core.exceptions import ValidationError
