@@ -1,33 +1,23 @@
+// components/ImageUpload.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
-import { X } from "lucide-react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { useState } from "react";
+import { ChevronLeft, ChevronRight, Upload, X } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
+import { toast } from "sonner";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";
 
 interface ImageUploadProps {
   title: string;
   subtitle: string;
   buttonText: string;
-  images: Array<{ id: string; url: string }>;  // Updated to include image ID
-  onUpload: (file: File) => void;
+  images: Array<{ id: string; url: string }>;
+  onUpload: (files: FileList) => void;
   onDelete: (imageId: string) => Promise<void>;
+  isLoading?: boolean;
 }
 
 const ImageUpload = ({
@@ -37,26 +27,31 @@ const ImageUpload = ({
   images,
   onUpload,
   onDelete,
+  isLoading = false,
 }: ImageUploadProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [fullSizeImage, setFullSizeImage] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload an image file');
-        return;
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Validate each file
+      const validFiles = Array.from(files).every(file => {
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not an image file`);
+          return false;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} is larger than 5MB`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validFiles) {
+        onUpload(files);
       }
-      
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB');
-        return;
-      }
-      
-      onUpload(file);
     }
   };
 
@@ -91,7 +86,9 @@ const ImageUpload = ({
       </div>
 
       <div className="relative min-h-[200px]">
-        {images.length > 0 ? (
+        {isLoading ? (
+          <Loading />
+        ) : images.length > 0 ? (
           <Carousel
             opts={{
               align: "start",
@@ -126,7 +123,10 @@ const ImageUpload = ({
             <CarouselNext />
           </Carousel>
         ) : (
-          <p className="text-gray-500">No images uploaded yet</p>
+          <div className="flex flex-col items-center justify-center h-full space-y-4">
+            <Upload className="h-12 w-12 text-gray-400" />
+            <p className="text-gray-500">No images uploaded yet</p>
+          </div>
         )}
       </div>
 
@@ -134,19 +134,24 @@ const ImageUpload = ({
         <Button
           variant="default"
           onClick={() => document.getElementById(title)?.click()}
+          disabled={isLoading}
+          className="space-x-2"
         >
-          {buttonText}
+          <Upload className="h-4 w-4" />
+          <span>{buttonText}</span>
         </Button>
         <input
           id={title}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={handleFileChange}
+          disabled={isLoading}
         />
       </div>
 
-      <Dialog 
+      <Dialog
         open={!!fullSizeImage} 
         onOpenChange={(open) => !open && setFullSizeImage(null)}
       >

@@ -58,66 +58,79 @@ export default function Home() {
   const [isLoadingTop, setIsLoadingTop] = useState(false);
   const [isLoadingBottom, setIsLoadingBottom] = useState(false);
 
-  const handleTopUpload = async (file: File) => {
+  const handleTopUpload = async (files: FileList) => {
     setIsLoadingTop(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('item_type', 'TOP');
-
-      const response = await fetch(`${API_BASE_URL}/api/upload/`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
+    const uploadPromises = Array.from(files).map(async (file) => {
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('item_type', 'TOP');
+  
+        const response = await fetch(`${API_BASE_URL}/api/upload/`, {
+          method: 'POST',
+          body: formData,
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+  
+        const data = await response.json();
+        return {
+          id: data.id,
+          url: `${API_BASE_URL}${data.image_url}`,
+        };
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        throw error;
       }
-
-      const data = await response.json();
-      const newItem: WardrobeItem = {
-        id: data.id,
-        url: `${API_BASE_URL}${data.image_url}`,
-      };
-      
-      setTops(prevTops => [...prevTops, newItem]);
-      toast.success("Top uploaded successfully!");
+    });
+  
+    try {
+      const newItems = await Promise.all(uploadPromises);
+      setTops(prevTops => [...prevTops, ...newItems]);
+      toast.success(`Successfully uploaded ${files.length} tops`);
     } catch (error) {
-      console.error('Error uploading top:', error);
-      toast.error('Failed to upload top');
+      toast.error('Some files failed to upload');
     } finally {
       setIsLoadingTop(false);
     }
   };
-
-
-  const handleBottomUpload = async (file: File) => {
+  
+  const handleBottomUpload = async (files: FileList) => {
     setIsLoadingBottom(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('item_type', 'BOTTOM');
-
-      const response = await fetch(`${API_BASE_URL}/api/upload/`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
+    const uploadPromises = Array.from(files).map(async (file) => {
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('item_type', 'BOTTOM');
+  
+        const response = await fetch(`${API_BASE_URL}/api/upload/`, {
+          method: 'POST',
+          body: formData,
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+  
+        const data = await response.json();
+        return {
+          id: data.id,
+          url: `${API_BASE_URL}${data.image_url}`,
+        };
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        throw error;
       }
-
-      const data = await response.json();
-      const newItem: WardrobeItem = {
-        id: data.id,
-        url: `${API_BASE_URL}${data.image_url}`,
-      };
-      
-      setBottoms(prevBottoms => [...prevBottoms, newItem]);
-      toast.success("Bottom uploaded successfully!");
+    });
+  
+    try {
+      const newItems = await Promise.all(uploadPromises);
+      setBottoms(prevBottoms => [...prevBottoms, ...newItems]);
+      toast.success(`Successfully uploaded ${files.length} bottoms`);
     } catch (error) {
-      console.error('Error uploading bottom:', error);
-      toast.error('Failed to upload bottom');
+      toast.error('Some files failed to upload');
     } finally {
       setIsLoadingBottom(false);
     }

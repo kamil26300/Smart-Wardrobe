@@ -10,36 +10,56 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 def upload_image(request):
     try:
-        print("Received request data:", request.data)  # Debug print
-
-        image = request.FILES.get("image")
-        item_type = request.data.get("item_type")
-
-        print(f"Image: {image}, Type: {item_type}")  # Debug print
+        image = request.FILES.get('image')
+        item_type = request.data.get('item_type')
 
         if not image:
             return Response(
-                {"error": "No image file provided"}, status=status.HTTP_400_BAD_REQUEST
+                {'error': 'No image file provided'},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         if not item_type:
             return Response(
-                {"error": "No item type provided"}, status=status.HTTP_400_BAD_REQUEST
+                {'error': 'No item type provided'},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Create wardrobe item
-        wardrobe_item = WardrobeItem.objects.create(image=image, item_type=item_type)
+        # Validate file type
+        if not image.content_type.startswith('image/'):
+            return Response(
+                {'error': 'File must be an image'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        serializer = WardrobeItemSerializer(wardrobe_item, context={"request": request})
+        # Validate file size (5MB limit)
+        if image.size > 5 * 1024 * 1024:
+            return Response(
+                {'error': 'File size must be less than 5MB'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        wardrobe_item = WardrobeItem.objects.create(
+            image=image,
+            item_type=item_type
+        )
+
+        serializer = WardrobeItemSerializer(
+            wardrobe_item,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         logger.error(f"Error in upload_image: {str(e)}")
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(["GET"])
