@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Loading } from "@/components/ui/loading";
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 interface WardrobeItem {
-  id: string;
+  id: Number;
   url: string;
   item_type: "TOP" | "BOTTOM";
 }
@@ -32,17 +32,18 @@ interface FinalSelection {
 }
 
 export default function SelectionPage() {
-  const [selectedTops, setSelectedTops] = useState<Set<string>>(new Set());
-  const [selectedBottoms, setSelectedBottoms] = useState<Set<string>>(
+  const [selectedTops, setSelectedTops] = useState<Set<Number>>(new Set());
+  const [selectedBottoms, setSelectedBottoms] = useState<Set<Number>>(
     new Set()
   );
   const [tops, setTops] = useState<WardrobeItem[]>([]);
   const [bottoms, setBottoms] = useState<WardrobeItem[]>([]);
   const [selections, setSelections] = useState<FinalSelection[]>([]);
   const [selectionsLoading, setSelectionsLoading] = useState(true);
+  const [showScrollButton, setShowScrollButton] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleTopSelect = (id: string) => {
+  const handleTopSelect = (id: Number) => {
     setSelectedTops((prev) => {
       const newSelection = new Set(prev);
       if (newSelection.has(id)) {
@@ -54,7 +55,7 @@ export default function SelectionPage() {
     });
   };
 
-  const handleBottomSelect = (id: string) => {
+  const handleBottomSelect = (id: Number) => {
     setSelectedBottoms((prev) => {
       const newSelection = new Set(prev);
       if (newSelection.has(id)) {
@@ -122,6 +123,47 @@ export default function SelectionPage() {
     fetchData();
   }, []);
 
+  const filteredSelections = useMemo(() => {
+    if (selectedTops.size === 0 && selectedBottoms.size === 0) {
+      // If nothing is selected, show all selections
+      return selections;
+    }
+
+    return selections.filter((selection) => {
+      const topMatches =
+        selectedTops.size === 0 || selectedTops.has(selection.top_id);
+      const bottomMatches =
+        selectedBottoms.size === 0 || selectedBottoms.has(selection.bottom_id);
+      return topMatches && bottomMatches;
+    });
+  }, [selections, selectedTops, selectedBottoms]);
+
+  useEffect(() => {
+    // Function to check if recommendations section is below viewport
+    const checkRecommendationsVisibility = () => {
+      const recommendationsSection = document.getElementById("recommendations");
+      if (recommendationsSection) {
+        const rect = recommendationsSection.getBoundingClientRect();
+        // Show button if the section is below the viewport
+        setShowScrollButton(rect.top > window.innerHeight);
+      }
+    };
+
+    // Check initially
+    checkRecommendationsVisibility();
+
+    // Check on scroll
+    window.addEventListener("scroll", checkRecommendationsVisibility);
+    // Check on resize
+    window.addEventListener("resize", checkRecommendationsVisibility);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("scroll", checkRecommendationsVisibility);
+      window.removeEventListener("resize", checkRecommendationsVisibility);
+    };
+  }, []);
+
   if (isLoading) {
     return <Loading />;
   }
@@ -134,7 +176,7 @@ export default function SelectionPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {tops.map((item) => (
             <div
-              key={item.id}
+              key={`${item}-${item.id}`}
               className={cn(
                 "relative h-[250px] border-2 rounded-md cursor-pointer transition-all duration-200",
                 selectedTops.has(item.id)
@@ -160,7 +202,7 @@ export default function SelectionPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {bottoms.map((item) => (
             <div
-              key={item.id}
+              key={`${item}-${item.id}`}
               className={cn(
                 "relative h-[250px] border-2 rounded-md cursor-pointer transition-all duration-200",
                 selectedBottoms.has(item.id)
@@ -187,6 +229,10 @@ export default function SelectionPage() {
         </h2>
         {selectionsLoading ? (
           <Loading />
+        ) : filteredSelections.length == 0 ? (
+          <div className="text-center text-gray-500">
+            No outfits match your selection.
+          </div>
         ) : (
           <Carousel
             opts={{
@@ -195,13 +241,13 @@ export default function SelectionPage() {
             className="w-9/10 mx-auto"
           >
             <CarouselContent>
-              {selections.map((selection) => (
+              {filteredSelections.map((selection) => (
                 <CarouselItem
                   key={selection.id}
                   className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
                 >
                   <div className="py-4">
-                    <div className="bg-white rounded-xl shadow-xl p-4 space-y-4 hover:shadow-xl transition-shadow">
+                    <div className="bg-white rounded-xl border-2 p-4 space-y-4 hover:shadow-xl transition-shadow">
                       {/* Top Image */}
                       <div className="relative aspect-square w-full overflow-hidden rounded-lg">
                         <Image
@@ -239,22 +285,24 @@ export default function SelectionPage() {
           </Carousel>
         )}
       </section>
-      <Button
-        onClick={() => {
-          const recommendationsSection =
-            document.getElementById("recommendations");
-          if (recommendationsSection) {
-            recommendationsSection.scrollIntoView({
-              behavior: "smooth",
-            });
-          }
-        }}
-        className="fixed bottom-6 right-6 shadow-lg bg-purple-600 hover:bg-purple-700 transition-all duration-300 group"
-        size="lg"
-      >
-        <span className="mr-2">See Recommendations</span>
-        <ArrowDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
-      </Button>
+      {showScrollButton && (
+        <Button
+          onClick={() => {
+            const recommendationsSection =
+              document.getElementById("recommendations");
+            if (recommendationsSection) {
+              recommendationsSection.scrollIntoView({
+                behavior: "smooth",
+              });
+            }
+          }}
+          className="fixed bottom-6 right-6 shadow-lg bg-purple-600 hover:bg-purple-700 transition-all duration-300 group"
+          size="lg"
+        >
+          <span className="mr-2">See Recommendations</span>
+          <ArrowDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
+        </Button>
+      )}
     </div>
   );
 }
