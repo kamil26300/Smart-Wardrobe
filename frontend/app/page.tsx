@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // Define interfaces for our data types
 interface WardrobeItem {
@@ -19,10 +19,16 @@ interface ApiResponse {
   id: string;
   image: string;
   image_url: string;
-  item_type: 'TOP' | 'BOTTOM';
+  item_type: "TOP" | "BOTTOM";
 }
 
-const FloatingActionButton = ({ tops, bottoms }: { tops: WardrobeItem[], bottoms: WardrobeItem[] }) => {
+const FloatingActionButton = ({
+  tops,
+  bottoms,
+}: {
+  tops: WardrobeItem[];
+  bottoms: WardrobeItem[];
+}) => {
   const router = useRouter();
 
   const handleNavigateToSelection = () => {
@@ -37,7 +43,7 @@ const FloatingActionButton = ({ tops, bottoms }: { tops: WardrobeItem[], bottoms
       return;
     }
 
-    router.push('/selection');
+    router.push("/selection");
   };
 
   return (
@@ -63,99 +69,103 @@ export default function Home() {
     const uploadPromises = Array.from(files).map(async (file) => {
       try {
         const formData = new FormData();
-        formData.append('image', file);
-        formData.append('item_type', 'TOP');
-  
-        const response = await fetch(`${API_BASE_URL}/api/upload/`, {
-          method: 'POST',
+        formData.append("image", file);
+        formData.append("item_type", "TOP");
+
+        const response = await fetch(`${BASE_URL}/api/upload/`, {
+          method: "POST",
           body: formData,
         });
-  
+
         if (!response.ok) {
           throw new Error(`Failed to upload ${file.name}`);
         }
-  
+
         const data = await response.json();
         return {
           id: data.id,
-          url: `${API_BASE_URL}${data.image_url}`,
+          url: BASE_URL + data.image_url,
         };
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error);
         throw error;
       }
     });
-  
+
     try {
       const newItems = await Promise.all(uploadPromises);
-      setTops(prevTops => [...prevTops, ...newItems]);
+      setTops((prevTops) => [...prevTops, ...newItems]);
       toast.success(`Successfully uploaded ${files.length} tops`);
     } catch (error) {
-      toast.error('Some files failed to upload');
+      toast.error("Some files failed to upload");
     } finally {
       setIsLoadingTop(false);
     }
   };
-  
+
   const handleBottomUpload = async (files: FileList) => {
     setIsLoadingBottom(true);
     const uploadPromises = Array.from(files).map(async (file) => {
       try {
         const formData = new FormData();
-        formData.append('image', file);
-        formData.append('item_type', 'BOTTOM');
-  
-        const response = await fetch(`${API_BASE_URL}/api/upload/`, {
-          method: 'POST',
+        formData.append("image", file);
+        formData.append("item_type", "BOTTOM");
+
+        const response = await fetch(`${BASE_URL}/api/upload/`, {
+          method: "POST",
           body: formData,
         });
-  
+
         if (!response.ok) {
           throw new Error(`Failed to upload ${file.name}`);
         }
-  
+
         const data = await response.json();
         return {
           id: data.id,
-          url: `${API_BASE_URL}${data.image_url}`,
+          url: BASE_URL + data.image_url,
         };
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error);
         throw error;
       }
     });
-  
+
     try {
       const newItems = await Promise.all(uploadPromises);
-      setBottoms(prevBottoms => [...prevBottoms, ...newItems]);
+      setBottoms((prevBottoms) => [...prevBottoms, ...newItems]);
       toast.success(`Successfully uploaded ${files.length} bottoms`);
     } catch (error) {
-      toast.error('Some files failed to upload');
+      toast.error("Some files failed to upload");
     } finally {
       setIsLoadingBottom(false);
     }
   };
 
-
   const handleDeleteImage = async (imageId: string) => {
     toast.promise(
       async () => {
-        const response = await fetch(`${API_BASE_URL}/api/wardrobe-items/${imageId}`, {
-          method: 'DELETE',
-        });
+        const response = await fetch(
+          `${BASE_URL}/api/wardrobe-items/${imageId}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to delete image');
+          throw new Error("Failed to delete image");
         }
 
         // Update state to remove deleted image
-        setTops(prevTops => prevTops.filter(img => img.id !== imageId));
-        setBottoms(prevBottoms => prevBottoms.filter(img => img.id !== imageId));
+        setTops((prevTops) => prevTops.filter((img) => img.id !== imageId));
+        setBottoms((prevBottoms) =>
+          prevBottoms.filter((img) => img.id !== imageId)
+        );
       },
       {
-        loading: 'Deleting image...',
-        success: 'Image deleted successfully!',
-        error: 'Failed to delete image',
+        loading: "Deleting image...",
+        success: "Image deleted successfully!",
+        error: "Failed to delete image",
       }
     );
   };
@@ -163,33 +173,40 @@ export default function Home() {
   const fetchImages = async () => {
     setIsLoadingTop(true);
     setIsLoadingBottom(true);
-  
+
     try {
-      toast.loading('Fetching your wardrobe items...');
-  
-      const topsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=TOP`);
+      toast.loading("Fetching your wardrobe items...");
+
+      const topsResponse = await fetch(
+        `${BASE_URL}/api/wardrobe-items/?type=TOP`
+      );
       const topsData: ApiResponse[] = await topsResponse.json();
-      setTops(topsData.map((item) => ({
-        id: item.id,
-        url: `${API_BASE_URL}${item.image_url}`
-      })));
-  
-      const bottomsResponse = await fetch(`${API_BASE_URL}/api/wardrobe-items/?type=BOTTOM`);
+      setTops(
+        topsData.map((item) => ({
+          id: item.id,
+          url: BASE_URL + item.image_url,
+        }))
+      );
+
+      const bottomsResponse = await fetch(
+        `${BASE_URL}/api/wardrobe-items/?type=BOTTOM`
+      );
       const bottomsData: ApiResponse[] = await bottomsResponse.json();
-      setBottoms(bottomsData.map((item) => ({
-        id: item.id,
-        url: `${API_BASE_URL}${item.image_url}`
-      })));
-  
-      toast.success('Wardrobe items loaded successfully!');
+      setBottoms(
+        bottomsData.map((item) => ({
+          id: item.id,
+          url: BASE_URL + item.image_url,
+        }))
+      );
+
+      toast.success("Wardrobe items loaded successfully!");
     } catch (error) {
-      toast.error('Failed to load wardrobe items');
+      toast.error("Failed to load wardrobe items");
     } finally {
       setIsLoadingTop(false); // ✅ unset loading
       setIsLoadingBottom(false); // ✅ unset loading
     }
   };
-  
 
   useEffect(() => {
     fetchImages();
@@ -200,7 +217,7 @@ export default function Home() {
       <h1 className="text-3xl font-bold text-center mb-8">
         Add clothes to your Virtual Wardrobe
       </h1>
-      
+
       <ImageUpload
         title="STEP 1"
         subtitle="Upload your tops you wish to add in wardrobe"
@@ -209,7 +226,8 @@ export default function Home() {
         onUpload={handleTopUpload}
         onDelete={handleDeleteImage}
         isLoading={isLoadingTop}
-        />
+        itemType="TOP"
+      />
 
       <ImageUpload
         title="STEP 2"
@@ -219,6 +237,7 @@ export default function Home() {
         onUpload={handleBottomUpload}
         onDelete={handleDeleteImage}
         isLoading={isLoadingBottom}
+        itemType="BOTTOM"
       />
       <FloatingActionButton tops={tops} bottoms={bottoms} />
     </div>

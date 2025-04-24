@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import Image from "next/image";
 import { useState } from "react";
-import { Upload, X } from "lucide-react";
+import { Trash2, Upload, X } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import { toast } from "sonner";
 import {
@@ -22,6 +22,8 @@ import {
   CarouselPrevious,
 } from "./ui/carousel";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
 interface ImageUploadProps {
   title: string;
   subtitle: string;
@@ -30,6 +32,7 @@ interface ImageUploadProps {
   onUpload: (files: FileList) => void;
   onDelete: (imageId: string) => Promise<void>;
   isLoading?: boolean;
+  itemType: "TOP" | "BOTTOM";
 }
 
 const ImageUpload = ({
@@ -40,10 +43,13 @@ const ImageUpload = ({
   onUpload,
   onDelete,
   isLoading = false,
+  itemType,
 }: ImageUploadProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [fullSizeImage, setFullSizeImage] = useState<string | null>(null);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
+  const [isAllDeleting, setIsAllDeleting] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -88,12 +94,53 @@ const ImageUpload = ({
     }
   };
 
+  const handleDeleteAll = async () => {
+    try {
+      setIsAllDeleting(true);
+      const response = await fetch(`${BASE_URL}/api/delete-all/${itemType}/`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete items");
+      }
+
+      const data = await response.json();
+      toast.success(data.message);
+
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting items:", error);
+      toast.error(`Failed to delete ${itemType.toLowerCase()}s`);
+    } finally {
+      setIsAllDeleting(false);
+      setIsDeleteAllDialogOpen(false);
+    }
+  };
+
   return (
     <div className="bg-gray-200 p-8 rounded-lg mb-6">
       <div className="flex justify-between items-start mb-8">
-        <div>
-          <h2 className="text-4xl font-bold mb-2">{title}</h2>
-          <p className="text-gray-600">{subtitle} ({images.length} uploaded)</p>
+        <div className="flex flex-col w-full">
+          <div className="flex w-full justify-between">
+            <h2 className="text-4xl font-bold mb-2">{title}</h2>
+            {images.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => setIsDeleteAllDialogOpen(true)}
+                disabled={isAllDeleting}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete All</span>
+              </Button>
+            )}
+          </div>
+          <p className="text-gray-600">
+            {subtitle} ({images.length} uploaded)
+          </p>
         </div>
       </div>
 
@@ -213,6 +260,50 @@ const ImageUpload = ({
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isDeleteAllDialogOpen}
+        onOpenChange={setIsDeleteAllDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Delete All {itemType === "TOP" ? "Tops" : "Bottoms"}
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete all {itemType.toLowerCase()}s?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteAllDialogOpen(false)}
+              disabled={isAllDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAll}
+              disabled={isAllDeleting}
+              className="flex items-center gap-2"
+            >
+              {isAllDeleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete All</span>
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

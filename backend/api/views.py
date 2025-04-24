@@ -185,6 +185,11 @@ def delete_all_items(request, item_type):
     try:
         # Delete all items of the specified type
         items = WardrobeItem.objects.filter(item_type=item_type)
+        # Delete the actual image file
+        for item in items:
+          if item.image:
+              if os.path.isfile(item.image.path):
+                  os.remove(item.image.path)
         count = items.count()
         items.delete()
 

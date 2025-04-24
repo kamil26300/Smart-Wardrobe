@@ -12,9 +12,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Plus } from "lucide-react";
+import { ArrowDown, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 interface WardrobeItem {
@@ -72,7 +72,7 @@ export default function SelectionPage() {
       try {
         // Fetch tops
         const topsResponse = await fetch(
-          API_BASE_URL + "/wardrobe-items/?type=TOP"
+          `${BASE_URL}/api/wardrobe-items/?type=TOP`
         );
         const topsData = await topsResponse.json();
         setTops(
@@ -85,7 +85,7 @@ export default function SelectionPage() {
 
         // Fetch bottoms
         const bottomsResponse = await fetch(
-          API_BASE_URL + "wardrobe-items/?type=BOTTOM"
+          `${BASE_URL}/api/wardrobe-items/?type=BOTTOM`
         );
         const bottomsData = await bottomsResponse.json();
         setBottoms(
@@ -106,9 +106,7 @@ export default function SelectionPage() {
     const fetchSelections = async () => {
       setSelectionsLoading(true);
       try {
-        const response = await fetch(
-          API_BASE_URL + "/final-selections/"
-        );
+        const response = await fetch(`${BASE_URL}/api/final-selections/`);
         if (!response.ok) throw new Error("Failed to fetch selections");
         const data = await response.json();
         setSelections(data);
@@ -183,7 +181,7 @@ export default function SelectionPage() {
       </section>
 
       {/* Recommended Outfits Section */}
-      <section className="pt-8 border-t">
+      <section className="pt-8 border-t" id="recommendations">
         <h2 className="text-3xl font-bold text-center mb-8">
           Recommended Outfits
         </h2>
@@ -193,18 +191,17 @@ export default function SelectionPage() {
           <Carousel
             opts={{
               align: "start",
-              loop: true,
             }}
-            className="w-full max-w-4xl mx-auto"
+            className="w-9/10 mx-auto"
           >
             <CarouselContent>
               {selections.map((selection) => (
                 <CarouselItem
                   key={selection.id}
-                  className="md:basis-1/2 lg:basis-1/3"
+                  className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
                 >
-                  <div className="p-4">
-                    <div className="bg-white rounded-xl shadow-lg p-6 space-y-4 hover:shadow-xl transition-shadow">
+                  <div className="py-4">
+                    <div className="bg-white rounded-xl shadow-xl p-4 space-y-4 hover:shadow-xl transition-shadow">
                       {/* Top Image */}
                       <div className="relative aspect-square w-full overflow-hidden rounded-lg">
                         <Image
@@ -237,13 +234,27 @@ export default function SelectionPage() {
               ))}
             </CarouselContent>
 
-            <div className="flex items-center justify-center gap-4 mt-8">
-              <CarouselPrevious />
-              <CarouselNext />
-            </div>
+            <CarouselPrevious />
+            <CarouselNext />
           </Carousel>
         )}
       </section>
+      <Button
+        onClick={() => {
+          const recommendationsSection =
+            document.getElementById("recommendations");
+          if (recommendationsSection) {
+            recommendationsSection.scrollIntoView({
+              behavior: "smooth",
+            });
+          }
+        }}
+        className="fixed bottom-6 right-6 shadow-lg bg-purple-600 hover:bg-purple-700 transition-all duration-300 group"
+        size="lg"
+      >
+        <span className="mr-2">See Recommendations</span>
+        <ArrowDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
+      </Button>
     </div>
   );
 }
