@@ -1,21 +1,6 @@
 import numpy as np
 import pandas as pd
 from ..models import Colour
-
-# Changes
-# def prepare_color_matrices():
-#     """Prepare color matrices from the Colours table"""
-#     # Get all colors from database
-#     colours = Colour.objects.all().values("id", "name", "type", "r", "g", "b")
-
-#     # Convert to pandas DataFrame
-#     color_info = pd.DataFrame(colours)
-
-#     # Create numpy array of RGB values
-#     color_matrix = color_info[["r", "g", "b"]].to_numpy()
-
-#     return color_matrix, color_info
-
 from django.core.cache import cache
 
 def prepare_color_matrices():
@@ -33,7 +18,7 @@ def prepare_color_matrices():
     
     return cached_data
 
-def get_top_matches_within_threshold(r, g, b, item_type, max_distance=100, top_n=3):
+def get_top_matches_within_threshold(r, g, b, item_type, max_distance=60, top_n=1):
     """Get top N color matches within a threshold distance"""
     # Get color matrices
     color_matrix, color_info = prepare_color_matrices()

@@ -26,6 +26,4 @@ class ItemColorAdmin(admin.ModelAdmin):
 
 @admin.register(FinalSelection)
 class FinalSelectionAdmin(admin.ModelAdmin):
-    list_display = ('top', 'bottom', 'match_strength', 'created_at')
-    list_filter = ('match_strength',)
-    ordering = ('-match_strength',)
+    list_display = ('top', 'bottom', 'created_at')

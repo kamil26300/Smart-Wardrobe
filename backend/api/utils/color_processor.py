@@ -57,5 +57,4 @@ def process_uploaded_image(file_bytes):
         
     except Exception as e:
         print(f"Error processing image: {str(e)}")
-        # Return a default color in case of error
-        return (128, 128, 128)  # Medium gray as fallback
+        return (128, 128, 128)

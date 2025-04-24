@@ -109,17 +109,13 @@ class FinalSelection(models.Model):
         on_delete=models.CASCADE,
         related_name='bottom_selections'
     )
-    match_strength = models.FloatField(
-        validators=[MinValueValidator(0), MaxValueValidator(1)]
-    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ['top', 'bottom']
-        ordering = ['-match_strength']
 
     def __str__(self):
-        return f"Match: {self.top.id} - {self.bottom.id} ({self.match_strength})"
+        return f"Match: {self.top.id} - {self.bottom.id})"
 
     def clean(self):
         from django.core.exceptions import ValidationError

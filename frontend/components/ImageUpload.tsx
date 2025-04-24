@@ -1,13 +1,26 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Image from "next/image";
 import { useState } from "react";
 import { Upload, X } from "lucide-react";
 import { Loading } from "@/components/ui/loading";
 import { toast } from "sonner";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "./ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "./ui/carousel";
 
 interface ImageUploadProps {
   title: string;
@@ -36,8 +49,8 @@ const ImageUpload = ({
     const files = e.target.files;
     if (files && files.length > 0) {
       // Validate each file
-      const validFiles = Array.from(files).every(file => {
-        if (!file.type.startsWith('image/')) {
+      const validFiles = Array.from(files).every((file) => {
+        if (!file.type.startsWith("image/")) {
           toast.error(`${file.name} is not an image file`);
           return false;
         }
@@ -70,7 +83,7 @@ const ImageUpload = ({
   const handleImageClick = (imageUrl: string, event: React.MouseEvent) => {
     // Prevent click from triggering when clicking delete button
     const target = event.target as HTMLElement;
-    if (!target.closest('button')) {
+    if (!target.closest("button")) {
       setFullSizeImage(imageUrl);
     }
   };
@@ -80,7 +93,7 @@ const ImageUpload = ({
       <div className="flex justify-between items-start mb-8">
         <div>
           <h2 className="text-4xl font-bold mb-2">{title}</h2>
-          <p className="text-gray-600">{subtitle}</p>
+          <p className="text-gray-600">{subtitle} ({images.length} uploaded)</p>
         </div>
       </div>
 
@@ -97,8 +110,11 @@ const ImageUpload = ({
           >
             <CarouselContent>
               {images.map((image) => (
-                <CarouselItem key={image.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
-                  <div 
+                <CarouselItem
+                  key={image.id}
+                  className="basis-1/2 md:basis-1/3 lg:basis-1/4"
+                >
+                  <div
                     className="relative h-[200px] sm:h-[350px] group cursor-pointer"
                     onClick={(e) => handleImageClick(image.url, e)}
                   >
@@ -151,11 +167,10 @@ const ImageUpload = ({
       </div>
 
       <Dialog
-        open={!!fullSizeImage} 
+        open={!!fullSizeImage}
         onOpenChange={(open) => !open && setFullSizeImage(null)}
       >
         <DialogContent className="w-screen h-auto sm:max-w-[90vw] sm:max-h-[90vh] sm:w-fit sm:h-fit p-0 rounded-none">
-
           <DialogHeader className="hidden">
             <DialogTitle>Full Size Image</DialogTitle>
           </DialogHeader>
@@ -168,10 +183,10 @@ const ImageUpload = ({
                   width={10000}
                   height={10000}
                   style={{
-                    width: 'auto',
-                    height: 'auto',
-                    maxHeight: '70vh',
-                    objectFit: 'contain',
+                    width: "auto",
+                    height: "auto",
+                    maxHeight: "70vh",
+                    objectFit: "contain",
                   }}
                 />
               </div>
@@ -185,7 +200,8 @@ const ImageUpload = ({
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this image? This action cannot be undone.
+              Are you sure you want to delete this image? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -195,10 +211,7 @@ const ImageUpload = ({
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-            >
+            <Button variant="destructive" onClick={handleConfirmDelete}>
               Delete
             </Button>
           </DialogFooter>
