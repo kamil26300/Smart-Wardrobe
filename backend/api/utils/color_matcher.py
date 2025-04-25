@@ -18,7 +18,7 @@ def prepare_color_matrices():
     
     return cached_data
 
-def get_top_matches_within_threshold(r, g, b, item_type, max_distance=50, top_n=1):
+def get_top_matches_within_threshold(r, g, b, item_type, max_distance=55, top_n=1):
     """Get top N color matches within a threshold distance"""
     # Get color matrices
     color_matrix, color_info = prepare_color_matrices()
